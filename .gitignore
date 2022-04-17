@@ -6,3 +6,4 @@ game.c
 main.c
 # Makefile
 red.c
+hello_world.png
