@@ -1,0 +1,8 @@
+.vscode/
+src/
+*.dll
+*.exe
+game.c
+main.c
+# Makefile
+red.c
