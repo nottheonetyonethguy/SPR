@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include <math.h>
-#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -66,11 +64,6 @@ bool init()
         printf("Failed to set renderer drawing color: %s\n", SDL_GetError());
         return false;
     }
-    if (IMG_Init(IMG_INIT_PNG) < 0)
-    {
-        printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
-        return false;
-    }
     gImage = IMG_Load("loading.png");
     if (gImage == NULL)
     {
@@ -92,7 +85,7 @@ bool init()
         printf("Failed to initialize TTF: %s\n", TTF_GetError());
         return false;
     }
-    font = TTF_OpenFont("font.ttf", 30);
+    font = TTF_OpenFont("font.ttf", 33);
     if (font == NULL)
     {
         printf("Failed to load font: %s\n", TTF_GetError());
@@ -123,6 +116,9 @@ void close()
 void entry(char *text)
 
 {
+    // // SDL_Delay(100);
+    // SDL_RenderClear(renderer);
+    // SDL_RenderCopy(renderer, gTexture, NULL, NULL);
     gText = TTF_RenderText_Solid(font, text, color);
     if (gText == NULL)
     {
@@ -137,9 +133,10 @@ void entry(char *text)
     }
     SDL_FreeSurface(gText);
 
+    //
     SDL_Rect textRect = {
         WIDTH / 2 - 5,
-        HEIGHT / 2 - 17,
+        HEIGHT / 2 - 30,
         gText->w,
         gText->h};
     SDL_RenderCopy(renderer, gTextTexture, NULL, &textRect);
@@ -150,6 +147,10 @@ void entry(char *text)
 
 void loadMedia(char *text)
 {
+    printf("2");
+    // SDL_RenderClear(renderer);
+    // SDL_RenderPresent(renderer);
+    // SDL_Delay(1000 / 60);
     gImage = NULL;
     gTexture = NULL;
     gImage = IMG_Load(text);
@@ -164,10 +165,10 @@ void loadMedia(char *text)
     }
     // free surface
     SDL_FreeSurface(gImage);
+    // SDL_DestroyTexture(gTexture);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, gTexture, NULL, NULL);
     SDL_RenderPresent(renderer);
-    SDL_DestroyTexture(gTexture);
 }
 
 void checker()
@@ -184,10 +185,11 @@ void checker()
     {
         close();
     }
-    else if (rPressed || sPressed || pPressed)
+    else if (rPressed)
     {
-        if (return1 || return2)
+        if (return1)
         {
+            printf("\ninto the game with rock");
             gameLogic(sPressed, pPressed, rPressed);
         }
     }
@@ -195,6 +197,7 @@ void checker()
 
 void gameLogic(bool s, bool p, bool r)
 {
+    printf("\nrgl %d", rPressed);
     if (s)
     {
         logic("scissors");
@@ -211,9 +214,6 @@ void gameLogic(bool s, bool p, bool r)
     {
         return;
     }
-    rPressed = false;
-    sPressed = false;
-    pPressed = false;
 }
 
 void logic(char *text)
@@ -244,16 +244,13 @@ void logic(char *text)
         else if (num < 66)
             loadMedia("rock_RockBeatsScissors.png");
         else
-            loadMedia("rock_RockEqualsRock.png");
+            loadMedia("rock_RockBeatsRock.png");
     }
 }
 
 int randomNumber()
 {
-    srand(time(NULL));
-
-    int n = rand() % 100;
-    return n;
+    return 1;
 }
 
 int main(int argc, char *argv[])
@@ -284,8 +281,8 @@ int main(int argc, char *argv[])
             case SDL_KEYDOWN:
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
-                    loop = false;
                     close();
+                    loop = false;
                 }
                 if (e.key.keysym.sym == SDLK_BACKSPACE)
                 {
@@ -302,6 +299,7 @@ int main(int argc, char *argv[])
                 {
 
                     yPressed = true;
+                    printf("\ny is pressed %d", yPressed);
                 }
                 if (e.key.keysym.sym == SDLK_n)
                 {
@@ -310,17 +308,21 @@ int main(int argc, char *argv[])
                 if (e.key.keysym.sym == SDLK_s)
                 {
                     sPressed = true;
+                    printf("\ns is pressed %d", sPressed);
                 }
                 if (e.key.keysym.sym == SDLK_p)
                 {
                     pPressed = true;
+                    printf("\np is pressed %d", pPressed);
                 }
                 if (e.key.keysym.sym == SDLK_r)
                 {
                     rPressed = true;
+                    printf("\nr is pressed %d", rPressed);
                 }
                 if (e.key.keysym.sym == SDLK_RETURN)
                 {
+                    printf("\nenter is pressed");
                     return1 = true;
                     checker();
                 }
@@ -328,13 +330,29 @@ int main(int argc, char *argv[])
                 {
                     return2 = true;
                 }
+
                 break;
             }
-            if (loop == false)
-            {
-                SDL_PumpEvents();
-            }
         }
+        // if (yPressed && (return1 || return2))
+        // {
+        //     entry(" ");
+        //     printf("\n1");
+        //     printf("\n0");
+        //     gameLogic(sPressed, pPressed, rPressed);
+        //     loadMedia("gameBG.png");
+        //     SDL_Delay(1000 / 60);
+        // }
+        // else if (nPressed && (return1 || return2))
+        // {
+        //     loop = false;
+        // }
+        // else if (rPressed && (return1 || return2))
+        // {
+        //     printf("\ninto the game with rock");
+        //     gameLogic(sPressed, pPressed, rPressed);
+        //     SDL_Delay(1000 / 60);
+        // }
     }
 
     close();

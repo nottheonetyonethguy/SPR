@@ -3,7 +3,9 @@ src/
 *.dll
 *.exe
 game.c
-main.c
+# main.c
+test.c
+test.exe
 # Makefile
 red.c
 hello_world.png
