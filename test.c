@@ -104,7 +104,7 @@ void close()
     SDL_DestroyWindow(gWindow);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyTexture(gTexture);
-    SDL_DestroyTexture(gTextTexture);
+    // SDL_DestroyTexture(gTextTexture);
     SDL_FreeSurface(gImage);
     SDL_FreeSurface(gText);
     TTF_CloseFont(font);
@@ -115,6 +115,7 @@ void close()
 void entry(char *text)
 
 {
+    // SDL_Delay(100);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, gTexture, NULL, NULL);
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, color);
@@ -124,28 +125,27 @@ void entry(char *text)
         printf("Failed to render text: %s\n", TTF_GetError());
         return;
     }
-    gTextTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (gTextTexture == NULL)
-    {
-        printf("Failed to create texture: %s\n", SDL_GetError());
-        return;
-    }
-    // SDL_FreeSurface(textSurface);
+    // gTextTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    // if (gTextTexture == NULL)
+    // {
+    //     printf("Failed to create texture: %s\n", SDL_GetError());
+    //     return;
+    // }
     SDL_Rect textRect = {
         WIDTH / 2 - 5,
         HEIGHT / 2 - 30,
         textSurface->w,
         textSurface->h};
-    SDL_RenderCopy(renderer, gTextTexture, NULL, &textRect);
+    SDL_RenderCopy(renderer, gTexture, NULL, &textRect);
     SDL_UpdateWindowSurface(gWindow);
     SDL_RenderPresent(renderer);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(gTexture);
 }
 
 void loadMedia(char *text)
 {
-
-    // SDL_FreeSurface(gImage);
-    // SDL_FreeSurface(gText);
+    printf("2");
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
@@ -163,13 +163,120 @@ void loadMedia(char *text)
     }
     // free surface
     SDL_FreeSurface(gImage);
+    // SDL_DestroyTexture(gTexture);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, gTexture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
 
+int main(int argc, char *argv[])
+{
+    if (!init())
+    {
+        printf("Failed to initialize!\n");
+        return -1;
+    }
+
+    bool loop = true;
+
+    while (loop)
+    {
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+        SDL_Event e;
+        while (SDL_PollEvent(&e) != 0)
+        {
+            switch (e.type)
+            {
+            case SDL_QUIT:
+                loop = false;
+                break;
+            case SDL_TEXTINPUT:
+                entry(e.text.text);
+                break;
+            case SDL_KEYDOWN:
+                if (e.key.keysym.sym == SDLK_ESCAPE)
+                {
+                    loop = false;
+                }
+                if (e.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    entry(" ");
+                }
+                if (e.key.keysym.sym == SDLK_y)
+                {
+                    yPressed = true;
+                }
+                if (e.key.keysym.sym == SDLK_n)
+                {
+                    nPressed = true;
+                }
+                if (e.key.keysym.sym == SDLK_s)
+                {
+                    sPressed = true;
+                    printf("\ns is pressed %d", sPressed);
+                }
+                if (e.key.keysym.sym == SDLK_p)
+                {
+                    pPressed = true;
+                    printf("\np is pressed %d", pPressed);
+                }
+                if (e.key.keysym.sym == SDLK_r)
+                {
+                    if (yPressed)
+                    {
+                        rPressed = true;
+                        printf("\nr is pressed %d", rPressed);
+                        gameLogic(sPressed, pPressed, rPressed);
+                    }
+                }
+                if (e.key.keysym.sym == SDLK_RETURN)
+                {
+                    return1 = true;
+                }
+                if (e.key.keysym.sym == SDLK_RETURN2)
+                {
+                    return2 = true;
+                }
+
+                break;
+            }
+        }
+
+        if (yPressed && (return1 || return2))
+        {
+            printf("\n1");
+            loadMedia("gameBG.png");
+            entry(" ");
+            printf("\n0");
+            // if (state[SDL_SCANCODE_R])
+            // {
+            //     printf("r is pressed %d", rPressed);
+            //     rPressed = true;
+            // }
+            // else if (state[SDL_SCANCODE_P])
+            // {
+            //     pPressed = true;
+            // }
+            // else if (state[SDL_SCANCODE_S])
+            // {
+            //     sPressed = true;
+            // // }
+            // printf("\n%d r ", rPressed);
+        }
+        else if (nPressed && (return1 || return2))
+        {
+            loop = false;
+        }
+    }
+    close();
+
+    return 0;
+}
+
 void gameLogic(bool s, bool p, bool r)
 {
+    printf("rgl %d", rPressed);
     if (s)
     {
         logic("scissors");
@@ -182,6 +289,13 @@ void gameLogic(bool s, bool p, bool r)
     {
         logic("rock");
     }
+    rPressed = false;
+    pPressed = false;
+    sPressed = false;
+    yPressed = false;
+    nPressed = false;
+    return1 = false;
+    return2 = false;
 }
 
 void logic(char *text)
@@ -219,86 +333,4 @@ void logic(char *text)
 int randomNumber()
 {
     return 1;
-}
-
-int main(int argc, char *argv[])
-{
-    if (!init())
-    {
-        printf("Failed to initialize!\n");
-        return -1;
-    }
-
-    bool loop = true;
-    while (loop)
-    {
-        SDL_Event e;
-        while (SDL_PollEvent(&e) != 0)
-        {
-            switch (e.type)
-            {
-            case SDL_QUIT:
-                loop = false;
-                break;
-            case SDL_TEXTINPUT:
-                entry(e.text.text);
-                break;
-            case SDL_KEYDOWN:
-                if (e.key.keysym.sym == SDLK_ESCAPE)
-                {
-                    loop = false;
-                }
-                if (e.key.keysym.sym == SDLK_BACKSPACE)
-                {
-                    entry(" ");
-                }
-                if (e.key.keysym.sym == SDLK_y)
-                {
-                    yPressed = true;
-                }
-                if (e.key.keysym.sym == SDLK_n)
-                {
-                    nPressed = true;
-                }
-                if (e.key.keysym.sym == SDLK_s)
-                {
-                    sPressed = true;
-                }
-                if (e.key.keysym.sym == SDLK_p)
-                {
-                    pPressed = true;
-                }
-                if (e.key.keysym.sym == SDLK_r)
-                {
-                    rPressed = true;
-                }
-                if (e.key.keysym.sym == SDLK_RETURN)
-                {
-                    return1 = true;
-                }
-                if (e.key.keysym.sym == SDLK_RETURN2)
-                {
-                    return2 = true;
-                }
-
-                break;
-            }
-        }
-        if (yPressed && (return1 || return2))
-        {
-            loadMedia("gameBG.png");
-            entry(" ");
-            gameLogic(sPressed, pPressed, rPressed);
-        }
-        else if (nPressed && (return1 || return2))
-        {
-            loop = false;
-        }
-        else if (return1 || return2)
-        {
-            entry(" ");
-        }
-    }
-    close();
-    return 0;
 }
