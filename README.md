@@ -26,5 +26,7 @@ Part: II
 ## Screenshots
 
 ![SS1](/loading.png)
+
 ![SS2](/gameBG.png)
+
 ![SS3](/rock_RockEqualsRock.png)
