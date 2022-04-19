@@ -1,40 +1,43 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <zlib.h>
+#include <png.h>
 
-#define WIDTH 1280
-#define HEIGHT 720
+const int WIDTH = 1280;
+const int HEIGHT = 720;
 
-// window
+// create a window
 SDL_Window *gWindow = NULL;
 
 // renderer
 SDL_Renderer *renderer = NULL;
 
-// image surface
+// image
 SDL_Surface *gImage = NULL;
+
+// texture
+SDL_Texture *gTexture = NULL;
+
+// font
+TTF_Font *font = NULL;
 
 SDL_Color color = {255, 255, 255};
 SDL_Surface *gText = NULL;
 SDL_Texture *gTextTexture = NULL;
 
-// texture
-SDL_Texture *gTexture = NULL;
-
-TTF_Font *font = NULL;
-
+// variables
 bool return1 = false, return2 = false;
 bool yPressed = false, nPressed = false;
 bool sPressed = false, pPressed = false, rPressed = false;
 
-// function protoypes
 bool init();
-void close();
+void closeSDL();
 void entry(char *text);
 void loadMedia(char *text);
 void gameLogic(bool s, bool p, bool r);
@@ -49,16 +52,16 @@ bool init()
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return false;
     }
-    gWindow = SDL_CreateWindow("title", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    gWindow = SDL_CreateWindow("SPR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     if (gWindow == NULL)
     {
-        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        printf("failed to initalise window %s\n", SDL_GetError());
         return false;
     }
     renderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == NULL)
     {
-        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        printf("renderer could not be create! %s\n", SDL_GetError());
         return false;
     }
     if (SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff) < 0)
@@ -66,7 +69,7 @@ bool init()
         printf("Failed to set renderer drawing color: %s\n", SDL_GetError());
         return false;
     }
-    if (IMG_Init(IMG_INIT_PNG) < 0)
+    if (IMG_Init(IMG_INIT_PNG || IMG_INIT_JPG || IMG_INIT_WEBP) < 0)
     {
         printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
         return false;
@@ -86,7 +89,6 @@ bool init()
     // free surface
     SDL_FreeSurface(gImage);
 
-    // font
     if (TTF_Init() < 0)
     {
         printf("Failed to initialize TTF: %s\n", TTF_GetError());
@@ -106,17 +108,15 @@ bool init()
     return true;
 }
 
-void close()
+void closeSDL()
 {
     SDL_StopTextInput();
     SDL_DestroyWindow(gWindow);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyTexture(gTexture);
-    SDL_DestroyTexture(gTextTexture);
-    SDL_FreeSurface(gImage);
-    SDL_FreeSurface(gText);
     TTF_CloseFont(font);
     TTF_Quit();
+    IMG_Quit();
     SDL_Quit();
 }
 
@@ -145,7 +145,7 @@ void entry(char *text)
     SDL_RenderCopy(renderer, gTextTexture, NULL, &textRect);
     SDL_UpdateWindowSurface(gWindow);
     SDL_RenderPresent(renderer);
-    SDL_DestroyTexture(gTexture);
+    SDL_DestroyTexture(gTextTexture);
 }
 
 void loadMedia(char *text)
@@ -172,17 +172,18 @@ void loadMedia(char *text)
 
 void checker()
 {
+
     if (yPressed && (return1 || return2))
     {
         loadMedia("gameBG.png");
-        entry(" ");
+        // entry(" ");
         yPressed = false;
         return1 = false;
         return2 = false;
     }
     else if (nPressed && (return1 || return2))
     {
-        close();
+        closeSDL();
     }
     else if (rPressed || sPressed || pPressed)
     {
@@ -190,9 +191,12 @@ void checker()
         {
             gameLogic(sPressed, pPressed, rPressed);
         }
+        else
+        {
+            loadMedia("gameBG.png");
+        }
     }
 }
-
 void gameLogic(bool s, bool p, bool r)
 {
     if (s)
@@ -219,53 +223,70 @@ void gameLogic(bool s, bool p, bool r)
 void logic(char *text)
 {
     int num = randomNumber();
-    if (text == "scissors")
+
+    if (num < 33)
     {
-        if (num < 33)
+        if (strcmp(text, "scissors") == 0)
+        {
             loadMedia("scissor_RockBeatsScissor.png");
-        else if (num < 66)
-            loadMedia("scissor_scissorBeatsPaper.png");
-        else
-            loadMedia("scissor_scissorEqualsScissor.png");
-    }
-    else if (text == "paper")
-    {
-        if (num < 33)
+        }
+        else if (strcmp(text, "paper") == 0)
+        {
             loadMedia("paper_PaperBeatsRock.png");
-        else if (num < 66)
-            loadMedia("paper_ScissorBeatsPaper.png");
-        else
-            loadMedia("paper_PaperEqualsPaper.png");
-    }
-    else if (text == "rock")
-    {
-        if (num < 33)
+        }
+        else if (strcmp(text, "rock") == 0)
+        {
             loadMedia("rock_PaperBeatsRock.png");
-        else if (num < 66)
+        }
+    }
+    else if (num < 66)
+    {
+        if (strcmp(text, "scissors") == 0)
+        {
+            loadMedia("scissor_scissorBeatsPaper.png");
+        }
+        else if (strcmp(text, "paper") == 0)
+        {
+            loadMedia("paper_ScissorBeatsPaper.png");
+        }
+        else if (strcmp(text, "rock") == 0)
+        {
             loadMedia("rock_RockBeatsScissors.png");
-        else
+        }
+    }
+    else
+    {
+        if (strcmp(text, "scissors") == 0)
+        {
+            loadMedia("scissor_scissorEqualsScissor.png");
+        }
+        else if (strcmp(text, "paper") == 0)
+        {
+            loadMedia("paper_PaperEqualsPaper.png");
+        }
+        else if (strcmp(text, "rock") == 0)
+        {
             loadMedia("rock_RockEqualsRock.png");
+        }
     }
 }
 
 int randomNumber()
 {
-    srand(time(NULL));
+    // srand(time(NULL));
 
     int n = rand() % 100;
     return n;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *agrv[])
 {
     if (!init())
     {
-        printf("Failed to initialize!\n");
+        printf("failed to initialize sdl %s", SDL_GetError());
         return -1;
     }
-
     bool loop = true;
-
     while (loop)
     {
 
@@ -276,7 +297,7 @@ int main(int argc, char *argv[])
             {
             case SDL_QUIT:
                 loop = false;
-                close();
+                closeSDL();
                 break;
             case SDL_TEXTINPUT:
                 entry(e.text.text);
@@ -285,7 +306,7 @@ int main(int argc, char *argv[])
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
                     loop = false;
-                    close();
+                    closeSDL();
                 }
                 if (e.key.keysym.sym == SDLK_BACKSPACE)
                 {
@@ -327,6 +348,7 @@ int main(int argc, char *argv[])
                 if (e.key.keysym.sym == SDLK_RETURN2)
                 {
                     return2 = true;
+                    checker();
                 }
                 break;
             }
@@ -335,9 +357,7 @@ int main(int argc, char *argv[])
                 SDL_PumpEvents();
             }
         }
+        closeSDL();
+        return 0;
     }
-
-    close();
-
-    return 0;
 }
